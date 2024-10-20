@@ -12,11 +12,11 @@ const server = createServer(async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*'); 
     console.log('server is running')
 
-    const getSpecificUserRegex = /^api\/users\/[^\/]+$/
+    const getSpecificUserRegex = /^\/api\/users\/[^\/]+$/
 
-
+    console.log(req.url);
     // Get all users
-    if (req.url === 'api/users' && req.method === 'GET') {
+    if (req.url === '/api/users' && req.method === 'GET') {
         res.writeHead(200);
         res.end(JSON.stringify(database));
     } 
@@ -24,9 +24,11 @@ const server = createServer(async (req, res) => {
     // Get specific user
     
     if ( typeof req.url === "string" && getSpecificUserRegex.test(req.url) && req.method === 'GET') {
-        const uuidRegex = /[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}(?:\/.*)?$/
-        const userId = req.url.split('/')[2];
+        const uuidRegex = new RegExp(/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i)
+        const userId = req.url.split('/')[3];
+        console.log(userId)
         const isUuid = uuidRegex.test(userId);
+
         if (!isUuid){
             res.writeHead(400);
             res.end("Aha, I saw that. That was not a uuid you asked me to find, silly")
@@ -44,7 +46,7 @@ const server = createServer(async (req, res) => {
 
     //Post new user
 
-    if (req.url === 'api/users' && req.method === 'POST') {
+    if (req.url === '/api/users' && req.method === 'POST') {
         const extractedUser = await extractPostData(req);
         const noUserExtracted = extractedUser === "error"
         const userMissingReqFields = typeof extractedUser !== 'string' && (!extractedUser.userName || !extractedUser.age)
@@ -58,7 +60,7 @@ const server = createServer(async (req, res) => {
             database.push(extractedUser as User);
             console.log(database);
             res.writeHead(201);
-            res.end(extractedUser)
+            res.end(JSON.stringify(extractedUser))
 
         }
     } 
