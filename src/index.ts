@@ -10,10 +10,8 @@ let database: User[]  = []
 const server = createServer(async (req, res) => {
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Access-Control-Allow-Origin', '*'); 
-    console.log('server is running')
 
     const getSpecificUserRegex = /^\/api\/users\/[^\/]+$/
-    console.log(req.url);
     // Get all users
     if (req.url === '/api/users' && req.method === 'GET') {
         res.writeHead(200);
@@ -25,7 +23,6 @@ const server = createServer(async (req, res) => {
     if ( typeof req.url === "string" && getSpecificUserRegex.test(req.url) && req.method === 'GET') {
         const uuidRegex = new RegExp(/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i)
         const userId = req.url.split('/')[3];
-        console.log(userId)
         const isUuid = uuidRegex.test(userId);
 
         if (!isUuid){
@@ -56,15 +53,14 @@ const server = createServer(async (req, res) => {
         } else {
             const newId = randomUUID();
             (extractedUser as User).id = newId;
-            database.push(extractedUser as User);
-            console.log(database);
+            database.push(extractedUser as User);;
             res.writeHead(201);
             res.end(JSON.stringify(extractedUser))
 
         }
     } 
 
-    if (req.url === '/api/users' && req.method === 'PUT') {
+    if (typeof req.url === "string" && getSpecificUserRegex.test(req.url) && req.method === 'PUT') {
         const extractedUser = await extractPostData(req);
         const noUserExtracted = extractedUser === "error"
         const uuidRegex = new RegExp(/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i)
@@ -78,12 +74,6 @@ const server = createServer(async (req, res) => {
             res.writeHead(400);
             res.end("Aha, I saw that. That was not a uuid you asked me to find, silly")
         } else {
-            // const newId = randomUUID();
-            // (extractedUser as User).id = newId;
-            // database.push(extractedUser as User);
-            // console.log(database);
-            // res.writeHead(201);
-            // res.end(JSON.stringify(extractedUser))
             const user = database.find(user => user.id === userId);
             if (user) {
                 res.writeHead(200);
@@ -103,9 +93,7 @@ const server = createServer(async (req, res) => {
         } 
     }
 
-    if (req.url === '/api/users' && req.method === 'DELETE') {
-        // const extractedUser = await extractPostData(req);
-        // const noUserExtracted = extractedUser === "error"
+    if (typeof req.url === "string" && getSpecificUserRegex.test(req.url) && req.method === 'DELETE') {
         const uuidRegex = new RegExp(/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i)
         const userId = req.url.split('/')[3];
         const isUuid = uuidRegex.test(userId);
@@ -127,7 +115,10 @@ const server = createServer(async (req, res) => {
             }
 
         } 
-    } 
+    } else {
+        res.writeHead(500);
+        res.end("Unknown command")
+    }
 })
 
 const PORT = process.env.port || 4000
